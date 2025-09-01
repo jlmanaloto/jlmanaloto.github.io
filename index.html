@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JLMM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1:#b7dede;
+      --bg-2:#eae4c8;
+      --brand:#4ca7a7;
+      --brand-hover:#3b8f8f;
+      --ink:#0f1b1b;
+      --sub:#4a6161;
+
+      --radius:16px;
+      --radius-pill:9999px;
+      --easing:cubic-bezier(.2,.8,.2,1);
+
+      --sat-offset:22px;
+      --icon-size:46px;
+
+      --side-w:380px;
+      --gap:28px;
+      --pad-x:20px;
+
+      --sheet-w: 1200px;
+    }
+
+    @media (min-width: 1200px){
+      :root{ --side-w: 340px; --gap: 20px; }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{
+      scrollbar-gutter: stable;
+      background: linear-gradient(120deg, var(--bg-1), var(--bg-2));
+      background-attachment: fixed;
+    }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background: transparent;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+    @media (prefers-reduced-motion:no-preference){ html{ scroll-behavior:smooth; } }
+
+    /* FAB NAV */
+    .speed-dial{
+      position:fixed; top:24px;
+      left: max(24px, calc((100vw - var(--sheet-w)) / 2 + 24px));
+      display:inline-flex; align-items:center; gap:16px;
+      z-index:20; user-select:none;
+    }
+    .main-btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 18px;
+      background:var(--brand); color:#fff; border:0; border-radius:var(--radius-pill);
+      font-weight:700; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.12);
+      transition:background .18s ease, transform .12s ease;
+    }
+    .main-btn:hover{ background:var(--brand-hover) }
+    .main-btn:active{ transform:translateY(1px) }
+    .icon-wrap{ position:relative; width:20px; height:20px; display:grid; place-items:center }
+    .icon-wrap svg, .icon-wrap .x{
+      position:absolute; inset:0;
+      transition:opacity .22s ease, transform .22s var(--easing);
+    }
+    .icon-wrap .compass{ opacity:1; transform:scale(1) }
+    .icon-wrap .x{ opacity:0; transform:rotate(-90deg) scale(.85); font-weight:900; font-size:18px; line-height:1 }
+    .speed-dial.open .icon-wrap .compass{ opacity:0; transform:scale(.85) }
+    .speed-dial.open .icon-wrap .x{ opacity:1; transform:rotate(0) scale(1) }
+
+    .satellites{
+      position:absolute; left:calc(100% + var(--sat-offset)); top:50%; transform:translateY(-50%);
+      display:flex; align-items:center; gap:16px; pointer-events:none;
+    }
+    .icon-btn{
+      width:var(--icon-size); height:var(--icon-size);
+      border-radius:50%; border:0; cursor:pointer;
+      background:var(--brand); color:#fff; display:grid; place-items:center;
+      box-shadow:0 10px 24px rgba(0,0,0,.12); transform:translateX(-12px) scale(.85); opacity:0;
+      transition:transform .28s var(--easing), opacity .16s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .icon-btn:hover{ background:var(--brand-hover); box-shadow:0 16px 30px rgba(0,0,0,.2) }
+    .icon-btn svg{ width:22px; height:22px; fill:#fff }
+    .speed-dial.open .satellites{ pointer-events:auto }
+    .speed-dial.open .icon-btn{ opacity:1; transform:translateX(0) scale(1) }
+    .speed-dial.open .icon-btn:nth-child(1){ transition-delay:40ms }
+    .speed-dial.open .icon-btn:nth-child(2){ transition-delay:90ms }
+    .speed-dial.open .icon-btn:nth-child(3){ transition-delay:140ms }
+    .speed-dial.open .icon-btn:nth-child(4){ transition-delay:190ms }
+
+    /* Layout */
+    .page{
+      max-width: var(--sheet-w);
+      width: 100%;
+      margin: 88px auto 40px auto;
+      padding: 0 var(--pad-x);
+      display:grid;
+      grid-template-columns: var(--side-w) 1fr;
+      gap: var(--gap);
+      align-items:start;
+    }
+    @media (max-width: 900px){ .page{ margin: 88px 16px 40px 16px; grid-template-columns: 1fr; } }
+
+    /* Make aside a vertical stack so the footer follows the card */
+    aside{
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Desktop: keep the card pinned but in normal flow */
+    @media (min-width: 901px){
+      .sidebar{
+        position: sticky;
+        top: 92px;
+        width: 100%;
+      }
+    }
+    @media (max-width: 900px){ .sidebar{ position: static; width: auto; } }
+
+    .sidebar{
+      border-radius: var(--radius);
+      padding:22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.22));
+      border: 1px solid rgba(0,0,0,.05);
+      box-shadow: 0 8px 18px rgba(0,0,0,.08);
+      backdrop-filter: blur(4px);
+      margin-bottom: 12px; /* space for the footer below */
+    }
+    .avatar{
+      width:140px; height:140px; border-radius:50%;
+      background:linear-gradient(135deg,#cfe5e5,#e9e3c8);
+      display:grid; place-items:center; overflow:hidden;
+      box-shadow:0 6px 16px rgba(0,0,0,.10);
+      margin: 0 auto;
+    }
+    .avatar svg{ width:64px; height:64px; fill:#7a8b8b; opacity:.9 }
+    .who{ margin-top:16px; font-weight:700; font-size:20px; text-align:center }
+    .where{ color:var(--sub); margin-top:4px; font-size:15px; text-align:center; }
+
+    .socials {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      margin: 18px auto 0;
+      width: 100%;
+    }
+    .socials a {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,.55);
+      border-radius: 50%;
+      transition: background .2s, transform .1s;
+    }
+    .socials a:hover { background: var(--brand); transform: translateY(-1px); }
+    .socials svg { width: 24px; height: 24px; fill: var(--ink); transition: fill .2s; }
+    .socials a:hover svg { fill: #fff; }
+
+    /* Footer that sits OUTSIDE the card */
+    .side-footer{
+      margin: 0;
+      font-size: 12px;
+      color: var(--sub);
+      text-align: center;
+      opacity: .75;
+    }
+
+    main{ padding-bottom: 64px; display:flex; justify-content:center; }
+    main .view{ display:none; width:100%; max-width:900px; padding:8px 16px; }
+    .view.active{ display:block; }
+
+    .section-title{
+      margin: 0 0 12px;
+      font-size: 26px;
+      border-bottom: 1px solid rgba(0,0,0,.08);
+      padding-bottom: 8px;
+    }
+
+    /* ===== Skills: category tiles (vertical) ===== */
+    .skills-grid{ display:flex; flex-direction:column; gap:14px; margin-top:10px; }
+    .skill-card{
+      display:flex; align-items:center; gap:12px;
+      padding:12px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.12));
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow: 0 6px 14px rgba(0,0,0,.06);
+      transition: transform .12s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .skill-card:hover{ transform: translateY(-1px); box-shadow:0 10px 22px rgba(0,0,0,.10); background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,.16)); }
+    .cat-icon{
+      width:46px; height:46px; border-radius:12px; display:grid; place-items:center;
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(0,0,0,.05);
+      box-shadow:0 6px 14px rgba(0,0,0,.10);
+      flex: 0 0 46px; overflow: hidden;
+    }
+    .cat-icon svg{ width:38px; height:38px; fill: var(--brand); }
+    .cat-icon svg.stroke-icon{ fill: none; stroke: var(--brand); }
+    .cat-icon svg.stroke-icon *{ fill: none; stroke: var(--brand); }
+    .cat-icon img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .skill-name{ font-weight:800; font-size:18px; letter-spacing:.2px; }
+    .skill-sub{ color:var(--sub); font-size:14px; }
+
+    /* ===== Experience tiles (vertical) ===== */
+    .xp-grid{ display:flex; flex-direction:column; gap:16px; margin-top:8px; }
+    .tile{
+      display:flex; align-items:center; gap:14px;
+      padding:14px; border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.16));
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow: 0 8px 16px rgba(0,0,0,.06);
+      cursor: pointer;
+    }
+    .tile .logo{
+      width:52px; height:52px; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,.12);
+      flex: 0 0 52px; object-fit: contain; background: transparent;
+    }
+    img.logo{ display:block; }
+    .tile .meta{ line-height:1.2 }
+    .tile .role{ font-weight:700; }
+    .tile .company{ color:var(--sub); font-size:14px; margin-top:3px; }
+
+    /* ===== Education & Achievements (cards) ===== */
+    .edu-grid, .ach-grid{ display:flex; flex-direction:column; gap:14px; margin-top:10px; }
+    .edu-card, .ach-card{
+      display:flex; align-items:center; gap:12px;
+      padding:12px; border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.12));
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow: 0 6px 14px rgba(0,0,0,.06);
+      transition: transform .12s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .edu-card:hover, .ach-card:hover{
+      transform: translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,.16));
+    }
+    .edu-name, .ach-name{ font-weight:800; font-size:18px; letter-spacing:.2px; }
+    .edu-sub, .ach-sub{ color:var(--sub); font-size:14px; }
+
+    .divider{ height:1px; background: rgba(0,0,0,.1); margin: 28px 0; }
+
+    /* ===== Modal (shared) ===== */
+    .modal-wrap{position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 60;}
+    .modal-wrap.open{ display: flex; }
+    .modal-backdrop{position:absolute; inset:0; background: rgba(15,27,27,.45); backdrop-filter: blur(2px); opacity: 0; transition: opacity .22s ease;}
+    .modal{position: relative; width: min(860px, calc(100% - 32px)); border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.92)); border: 1px solid rgba(0,0,0,.06); box-shadow: 0 24px 60px rgba(0,0,0,.22); transform: translateY(10px) scale(.98); opacity: 0; transition: transform .28s var(--easing), opacity .28s var(--easing); overflow: hidden;}
+    .modal-header{display:flex; align-items:center; gap:12px; padding:18px 18px 8px 18px; border-bottom: 1px solid rgba(0,0,0,.06);}
+    .modal-logo{width:56px; height:56px; border-radius:14px; display:grid; place-items:center; background:#fff; box-shadow:0 8px 18px rgba(0,0,0,.16); overflow:hidden; flex: 0 0 56px;}
+    .modal-logo svg{ width:70%; height:70%; }
+    .modal-title{ font-weight:800; font-size:20px; }
+    .modal-sub{ color:var(--sub); margin-top:2px; font-size:14px; }
+    .modal-body{ padding:16px 18px 18px 18px; line-height:1.55;}
+    .close-x{position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:9999px; border:0; background:rgba(0,0,0,.06); color:#333; font-size:20px; font-weight:900; cursor:pointer; display:grid; place-items:center; transition: background .18s ease, transform .12s ease;}
+    .close-x:hover{ background:rgba(0,0,0,.12); }
+    .close-x:active{ transform: translateY(1px); }
+
+    .modal-wrap.open .modal-backdrop{ opacity:1; }
+    .modal-wrap.open .modal{ transform: translateY(0) scale(1); opacity:1; }
+  </style>
+</head>
+<body>
+  <!-- FAB nav -->
+  <nav class="speed-dial" id="fabNav">
+    <button class="main-btn" id="fabToggle" aria-expanded="false">
+      <span class="icon-wrap">
+        <svg class="compass" viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm3.1 6.9l-1.7 4.3-4.3 1.7 1.7-4.3 4.3-1.7z"/>
+        </svg>
+        <span class="x">×</span>
+      </span>
+      <span>Explore</span>
+    </button>
+    <div class="satellites" id="fabActions">
+      <button class="icon-btn" data-view="summary" title="About Me">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h10v2H4z"/></svg>
+      </button>
+      <button class="icon-btn" data-view="skills" title="Skills">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3 5 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg>
+      </button>
+      <button class="icon-btn" data-view="experience" title="Experience">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z M9 10h6v2H9z"/></svg>
+      </button>
+      <button class="icon-btn" data-view="education" title="Education & Achievements">
+        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 9.27L3.74 9 12 4.73 20.26 9 12 12.27z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- Sidebar -->
+    <aside>
+      <div class="sidebar">
+        <div class="avatar">
+          <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+        </div>
+        <div class="who">Janssen Lester Manaloto</div>
+        <div class="where">Dubai, United Arab Emirates</div>
+
+        <div class="socials">
+          <a href="mailto:janssenlester.manaloto@gmail.com" title="Email" aria-label="Email">
+            <svg viewBox="0 0 24 24"><path d="M2 5h20v14H2zM4 7l8 5 8-5"/></svg>
+          </a>
+          <a href="https://github.com/jlmanaloto" target="_blank" title="GitHub" rel="noopener noreferrer" aria-label="GitHub">
+            <svg viewBox="0 0 24 24"><path d="M12 .5A11.5 11.5 0 0 0 .5 12.2c0 5.1 3.3 9.4 7.8 10.9.6.1.8-.3.8-.6v-2.2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.7 1.2 3.4.9.1-.7.4-1.3.7-1.6-2.5-.3-5.1-1.2-5.1-5.5 0-1.2.4-2.3 1.1-3.1-.1-.3-.5-1.5.1-3 0 0 .9-.3 3 1.1a10 10 0 0 1 5.3 0c2.1-1.4 3-1.1 3-1.1.6 1.5.2 2.7.1 3 .7.8 1.1 1.9 1.1 3.1 0 4.3-2.6 5.2-5.2 5.5.4.3.8 1 .8 2.1v3.1c0 .3.2.7.8.6a11.5 11.5 0 0 0 7.8-10.9A11.5 11.5 0 0 0 12 .5z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/jlmm" target="_blank" title="LinkedIn" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V23h-4zM8 8h3.8v2.1h.1C12.6 8.9 14.2 8 16.4 8 21 8 22 10.9 22 15.1V23h-4v-6.6c0-1.6 0-3.7-2.3-3.7s-2.6 1.8-2.6 3.6V23H8z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Copyright placed OUTSIDE the glass card -->
+      <footer class="side-footer" aria-label="Copyright">
+        © <span id="y"></span> Janssen Lester Manaloto
+      </footer>
+    </aside>
+
+    <!-- Main -->
+    <main>
+      <!-- Summary -->
+      <section id="view-summary" class="view active">
+        <h2 class="section-title">About Me</h2>
+        <p>Hey there! 👋</p>
+        <p>I'm Lester and I'm currently working as a <strong>Senior DevOps Data Engineer at Wio Bank</strong>,
+            where I design and manage <strong>Data Infrastructure</strong>,
+            build <strong>Automation and Internal tools</strong>,
+            and help drive <strong>MLOps adoption</strong> across teams.
+            I work closely with Data Science teams to deploy and <strong>scale AI/ML services</strong>,
+            ensuring models move smoothly from development to production.
+        </p>
+        <p>I've also been expanding into Data Science and Machine Learning,
+            applying techniques like model training and fine-tuning to improve
+            infrastructure reliability and enhance the quality of life for internal teams.
+        </p>
+</section>
+      </section>
+
+      <!-- Skills -->
+      <section id="view-skills" class="view">
+        <h2 class="section-title">Skills</h2>
+
+        <div class="skills-grid">
+          <article class="skill-card" data-title="Cloud" data-sub="GCP • Azure • AWS" data-summary="Placeholder: Cloud platforms, container orchestration, IaC, and delivery pipelines across environments.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 010-8 5 5 0 019.7 1.2A3.5 3.5 0 1117 18H7z"/></svg>
+            </div>
+            <div>
+              <div class="skill-name">Cloud</div>
+              <div class="skill-sub">GCP • Azure • AWS</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="DevOps" data-sub="CI/CD • ELK • Kubernetes • Docker • Helm • Terraform" data-summary="Placeholder: Automation, reliability, observability, and DevOps culture for fast & stable delivery.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-1.7-1L15 2h-6l-.3 4a7.6 7.6 0 00-1.7 1l-2.4-1-2 3.5L4.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 001.7 1L9 22h6l.3-4a7.6 7.6 0 001.7-1l2.4 1 2-3.5-2-1.5zM12 15a3 3 0 110-6 3 3 0 010 6z"/></svg>
+            </div>
+            <div>
+              <div class="skill-name">DevOps</div>
+              <div class="skill-sub">CI/CD • Kubernetes • Docker • Helm • Terraform</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="Monitoring" data-sub="Prometheus • Victoria Metrics • Grafana • Alertmanager • ELK" data-summary="Placeholder: Observability stacks, alerting, and monitoring platforms for infrastructure and applications.">
+            <div class="cat-icon" aria-hidden="true">
+              <!-- Stroke-only brand-colored monitoring icon -->
+              <svg class="stroke-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="14" height="10" rx="2" ry="2"></rect>
+                <path d="M4.5 10h2.5l2-3 2 6 2-3h2.5"></path>
+                <circle cx="18" cy="17" r="3"></circle>
+                <line x1="19.8" y1="18.8" x2="21.5" y2="20.5"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="skill-name">Monitoring</div>
+              <div class="skill-sub">Prometheus • Victoria Metrics • Grafana • Alertmanager • ELK</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="Software Engineering" data-sub="Bash • Python • Go • Git • OpenAPI" data-summary="Placeholder: Engineering practices, code quality, testing, and dependable release engineering.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 4H7a3 3 0 00-3 3v2a3 3 0 01-3 3 3 3 0 013 3v2a3 3 0 003 3h2M15 4h2a3 3 0 013 3v2a3 3 0 003 3 3 3 0 00-3 3v2a3 3 0 01-3 3h-2"/></svg>
+            </div>
+            <div>
+              <div class="skill-name">Software Engineering</div>
+              <div class="skill-sub">Bash • Python • Go • Git • OpenAPI</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="Data Engineering" data-sub="Kafka • Debezium" data-summary="Placeholder: Streaming & batch pipelines, orchestration, transformations, and reliability at scale.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-1.7-1L15 2h-6l-.3 4a7.6 7.6 0 00-1.7 1l-2.4-1-2 3.5L4.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 001.7 1L9 22h6l.3-4a7.6 7.6 0 001.7-1l2.4 1 2-3.5-2-1.5zM12 15a3 3 0 110-6 3 3 0 010 6z"/></svg>
+            </div>
+            <div>
+              <div class="skill-name">Data Engineering</div>
+              <div class="skill-sub">Kafka • Debezium</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="Data Science" data-sub="TensorFlow • PyTorch • Scikit-learn • Transformers • DataIKU" data-summary="Placeholder: Model training, evaluation, and serving with production-minded ML Ops.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 4a3 3 0 0 0-3 3v2a3 3 0 0 0 0 6v2a3 3 0 0 0 3 3"/>
+                <line x1="12" y1="2" x2="12" y2="22"/>
+                <circle cx="17" cy="6" r="1"/><circle cx="17" cy="12" r="1"/><circle cx="17" cy="18" r="1"/>
+                <line x1="12" y1="6" x2="16" y2="6"/><line x1="12" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="16" y2="18"/>
+              </svg>
+            </div>
+            <div>
+              <div class="skill-name">Data Science</div>
+              <div class="skill-sub">TensorFlow • PyTorch • Scikit-learn • Transformers • DataIKU</div>
+            </div>
+          </article>
+
+          <article class="skill-card" data-title="Database" data-sub="PostgreSQL • MySQL • MongoDB" data-summary="Placeholder: Relational & NoSQL design, performance tuning, and lakehouse patterns.">
+            <div class="cat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3c-4.4 0-8 1.3-8 3v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6c0-1.7-3.6-3-8-3zm0 2c3.9 0 6 .9 6 1s-2.1 1-6 1-6-.9-6-1 .1-1 6-1zm0 6c3.9 0 6 .9 6 1s-2.1 1-6 1-6-.9-6-1 .1-1 6-1z"/></svg>
+            </div>
+            <div>
+              <div class="skill-name">Database</div>
+              <div class="skill-sub">PostgreSQL • MySQL • MongoDB</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Experience -->
+      <section id="view-experience" class="view">
+        <h2 class="section-title">Experience</h2>
+        <div class="xp-grid">
+          <article class="tile"
+                   data-role="Senior DevOps Data Engineer"
+                   data-company="Wio"
+                   data-dates="AUG 2024– Present"
+                   data-summary="Placeholder content: Led cloud-native data platform modernization, automated CI/CD and IaC, and introduced SRE practices for data pipelines."
+                   data-bullets="Designed multi-stage CI/CD for data apps and migrations|Containerized batch and stream jobs on Kubernetes with Helm|Created reusable Terraform modules and enforced change reviews|Implemented observability with Prometheus, Grafana, Alertmanager and ELK plus SLOs|Improved deployment lead time via trunk-based development and automated testing">
+            <img class="logo" src="static/wio-logo.png" alt="Wio logo" title="Wio">
+            <div class="meta">
+              <div class="role">Senior DevOps Data Engineer</div>
+              <div class="company">Wio Bank</div>
+            </div>
+          </article>
+
+          <article class="tile"
+                   data-role="Senior DevOps Data Engineer"
+                   data-company="Emirates"
+                   data-dates="FEB 2023 – JUL 2024"
+                   data-summary="Placeholder content: Built scalable GitOps workflows, standardized observability stacks, and improved release reliability across services."
+                   data-bullets="Built GitOps workflows using Helm and Kustomize|Centralized logging and metrics; established alert playbooks|Hardened clusters with network policies, namespace isolation and secrets management|Partnered with data teams to productionize pipelines and features">
+            <img class="logo" src="static/emirates-logo.png" alt="Emirates logo" title="Emirates">
+            <div class="meta">
+              <div class="role">Senior DevOps Data Engineer</div>
+              <div class="company">Emirates</div>
+            </div>
+          </article>
+
+          <article class="tile"
+                   data-role="DevOps Engineer"
+                   data-company="Merkle Hedge"
+                   data-dates="APR 2022 – FEB 2023"
+                   data-summary="Placeholder content: Hardened Kubernetes clusters, optimized Kafka throughput, and implemented secrets management."
+                   data-bullets="Tuned Kafka brokers and connectors; capacity planning and scaling|Automated cluster provisioning and blue-green deployments|Implemented secrets and configuration management; zero-downtime upgrades|Built cost and utilization dashboards to optimize infra spend">
+            <img class="logo" src="static/mh-logo.png" alt="Merkle Hedge logo" title="Merkle Hedge">
+            <div class="meta">
+              <div class="role">DevOps Engineer</div>
+              <div class="company">Merkle Hedge</div>
+            </div>
+          </article>
+
+          <article class="tile"
+                   data-role="Site Reliability Engineer"
+                   data-company="Kalibrr"
+                   data-dates="DEC 2018 – APR 2022"
+                   data-summary="Placeholder content: Created SLOs, error budgets, and auto-remediation runbooks; reduced p99 latency incidents."
+                   data-bullets="Defined SLOs and latency targets; burn-rate alerts for fast detection|Wrote auto-remediation runbooks and incident response playbooks|Load-tested critical flows and fixed bottlenecks across services|Improved on-call health with blameless postmortems and action tracking">
+            <img class="logo" src="static/kalibrr-logo.png" alt="Kalibrr logo" title="Kalibrr">
+            <div class="meta">
+              <div class="role">Site Reliability Engineer</div>
+              <div class="company">Kalibrr</div>
+            </div>
+          </article>
+
+          <article class="tile"
+                   data-role="Systems Administrator"
+                   data-company="HTech"
+                   data-dates="JUN 2016 – NOV 2018"
+                   data-summary="Placeholder content: Managed on-prem and cloud infra, automated backups, and streamlined incident response."
+                   data-bullets="Managed Linux and Windows servers, databases and monitoring|Automated provisioning with scripts and config management|Implemented offsite backups and tested restore procedures regularly|Streamlined incident handling and patch cadence across environments">
+            <img class="logo" src="static/htech-logo.png" alt="HTech logo" title="HTech">
+            <div class="meta">
+              <div class="role">Systems Administrator</div>
+              <div class="company">HTech Corporation</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Education & Achievements (real info) -->
+      <section id="view-education" class="view">
+        <h2 class="section-title">Education</h2>
+        <div class="edu-grid">
+          <article class="edu-card">
+            <div class="cat-icon" aria-hidden="true">
+              <img src="static/mapua-university-logo.png" alt="Mapua logo">
+            </div>
+            <div>
+              <div class="edu-name">Master of Science in Computer Engineering</div>
+              <div class="edu-sub">Mapúa University • 2024 – Present</div>
+            </div>
+          </article>
+
+          <article class="edu-card">
+            <div class="cat-icon" aria-hidden="true">
+              <img src="static/dlsud-logo.png" alt="Diploma">
+            </div>
+            <div>
+              <div class="edu-name">Bachelor of Science in Computer Engineering</div>
+              <div class="edu-sub">De La Salle University – Dasmariñas • 2011 – 2016</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2 class="section-title">Achievements</h2>
+        <div class="ach-grid">
+          <article class="ach-card">
+            <div class="cat-icon" aria-hidden="true">
+              <img src="static/emirates-logo.png" alt="Emirates logo">
+            </div>
+            <div>
+              <div class="ach-name">Najm Award</div>
+              <div class="ach-sub">Emirates Group – Rewards & Recognition Programme</div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Shared Modal -->
+  <div class="modal-wrap" id="modalWrap" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="close-x" id="modalClose" aria-label="Close">×</button>
+      <div class="modal-header">
+        <div class="modal-logo" id="modalLogo"></div>
+        <div>
+          <div class="modal-title" id="modalTitle">Title</div>
+          <div class="modal-sub" id="modalSub">Subtitle</div>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <p>[Placeholder details] Use this space for a short description and bullet points.</p>
+        <ul>
+          <li>Point A</li>
+          <li>Point B</li>
+          <li>Point C</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- FAB nav ---------- */
+    const fabNav   = document.getElementById('fabNav');
+    const fabBtn   = document.getElementById('fabToggle');
+    const sats     = document.getElementById('fabActions');
+    const satBtns  = sats.querySelectorAll('.icon-btn');
+
+    function closeFab(){
+      fabNav.classList.remove('open');
+      fabBtn.setAttribute('aria-expanded','false');
+    }
+    fabBtn.addEventListener('click', () => {
+      const open = fabNav.classList.toggle('open');
+      fabBtn.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (e) => {
+      if (!fabNav.classList.contains('open')) return;
+      if (!fabNav.contains(e.target)) closeFab();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && fabNav.classList.contains('open')) closeFab();
+    });
+
+    const VIEWS = {
+      summary:    document.getElementById('view-summary'),
+      skills:     document.getElementById('view-skills'),
+      experience: document.getElementById('view-experience'),
+      education:  document.getElementById('view-education'),
+    };
+    function showView(name){
+      Object.values(VIEWS).forEach(v => v?.classList.remove('active'));
+      (VIEWS[name] || VIEWS.summary)?.classList.add('active');
+    }
+    function routeFromHash(){
+      let name = (location.hash || '#/summary').replace('#/','');
+      if (!location.hash) history.replaceState(null, '', '#/summary');
+      showView(name);
+    }
+    satBtns.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const view = b.getAttribute('data-view');
+        history.pushState(null, '', '#/'+view);
+        routeFromHash();
+        closeFab();
+      });
+    });
+    window.addEventListener('popstate', routeFromHash);
+    window.addEventListener('hashchange', routeFromHash);
+    routeFromHash();
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+
+    /* ---------- Modal logic (experience only) ---------- */
+    const modalWrap     = document.getElementById('modalWrap');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalCloseBtn = document.getElementById('modalClose');
+    const modalLogo     = document.getElementById('modalLogo');
+    const modalTitle    = document.getElementById('modalTitle');
+    const modalSub      = document.getElementById('modalSub');
+    const modalBody     = document.getElementById('modalBody');
+
+    function openModal() {
+      modalWrap.classList.add('open');
+      modalWrap.setAttribute('aria-hidden', 'false');
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+      modalWrap.classList.remove('open');
+      modalWrap.setAttribute('aria-hidden', 'true');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    modalBackdrop.addEventListener('click', closeModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalWrap.classList.contains('open')) closeModal();
+    });
+
+    function setModalLogoFromElement(el, fallbackText){
+      modalLogo.innerHTML = '';
+      if (!el) { modalLogo.textContent = fallbackText || '?'; return; }
+      const clone = el.cloneNode(true);
+      if (clone.tagName === 'IMG') {
+        clone.removeAttribute('title');
+        clone.style.width = '100%';
+        clone.style.height = '100%';
+        clone.style.objectFit = 'contain';
+        clone.classList.remove('logo');
+        modalLogo.appendChild(clone);
+      } else if (clone.tagName === 'SVG') {
+        clone.removeAttribute('width'); clone.removeAttribute('height');
+        modalLogo.appendChild(clone);
+      } else {
+        modalLogo.textContent = fallbackText || '?';
+      }
+    }
+
+    document.querySelectorAll('.tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        const role    = tile.dataset.role    || 'Role';
+        const company = tile.dataset.company || 'Company';
+        const dates   = tile.dataset.dates   || 'Dates';
+        const summary = tile.dataset.summary || 'Details about this role.';
+
+        document.querySelector('#modalTitle').textContent = `${role} @ ${company}`;
+        document.querySelector('#modalSub').textContent   = dates;
+
+        const bullets = (tile.dataset.bullets || '')
+          .split('|')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map(li => `<li>${li}</li>`)
+          .join('');
+
+        document.querySelector('#modalBody').innerHTML = `
+          <p>${summary}</p>
+          ${bullets ? `<ul>${bullets}</ul>` : ''}
+        `;
+
+
+        setModalLogoFromElement(tile.querySelector('img.logo'), company?.[0]);
+        openModal();
+      });
+    });
+  </script>
+</body>
+</html>
