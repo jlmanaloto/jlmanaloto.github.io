@@ -136,13 +136,22 @@
       margin-bottom: 12px; /* space for the footer below */
     }
     .avatar{
-      width:140px; height:140px; border-radius:50%;
-      background:linear-gradient(135deg,#cfe5e5,#e9e3c8);
-      display:grid; place-items:center; overflow:hidden;
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      overflow:hidden;
+      margin:0 auto;
+      background:transparent;
       box-shadow:0 6px 16px rgba(0,0,0,.10);
-      margin: 0 auto;
     }
-    .avatar svg{ width:64px; height:64px; fill:#7a8b8b; opacity:.9 }
+    .avatar-img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+      object-position:center;
+      transform: scale(1.08);
+    }
     .who{ margin-top:16px; font-weight:700; font-size:20px; text-align:center }
     .where{ color:var(--sub); margin-top:4px; font-size:15px; text-align:center; }
 
@@ -309,7 +318,7 @@
     <aside>
       <div class="sidebar">
         <div class="avatar">
-          <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+          <img src="static/jlmm.png" alt="JLMM logo" class="avatar-img" loading="lazy" decoding="async">
         </div>
         <div class="who">Janssen Lester Manaloto</div>
         <div class="where">Dubai, United Arab Emirates</div>
@@ -449,8 +458,12 @@
                    data-role="Senior DevOps Data Engineer"
                    data-company="Wio"
                    data-dates="AUG 2024– Present"
-                   data-summary="Placeholder content: Led cloud-native data platform modernization, automated CI/CD and IaC, and introduced SRE practices for data pipelines."
-                   data-bullets="Designed multi-stage CI/CD for data apps and migrations|Containerized batch and stream jobs on Kubernetes with Helm|Created reusable Terraform modules and enforced change reviews|Implemented observability with Prometheus, Grafana, Alertmanager and ELK plus SLOs|Improved deployment lead time via trunk-based development and automated testing">
+                   data-bullets="Streamline ML containerization and deployments|
+                    Developed automation solutions reducing BAU operation tasks|
+                    Created reusable templates for infra applications|
+                    Strimzi Kafka Deployment & Management|
+                    Fine-tuned SLM for improved internal processes|
+                    Improved Data platform monitoring and observability">
             <img class="logo" src="static/wio-logo.png" alt="Wio logo" title="Wio">
             <div class="meta">
               <div class="role">Senior DevOps Data Engineer</div>
@@ -462,8 +475,12 @@
                    data-role="Senior DevOps Data Engineer"
                    data-company="Emirates"
                    data-dates="FEB 2023 – JUL 2024"
-                   data-summary="Placeholder content: Built scalable GitOps workflows, standardized observability stacks, and improved release reliability across services."
-                   data-bullets="Built GitOps workflows using Helm and Kustomize|Centralized logging and metrics; established alert playbooks|Hardened clusters with network policies, namespace isolation and secrets management|Partnered with data teams to productionize pipelines and features">
+                   data-bullets="CI/CD - Improved IaC with the implementation of Terraform |
+                   Logging and observability improvements for Data Science Platform |
+                   Developed in-house CLI tool for platform and secrets management |
+                   Containerization and deployment of microservices to Kubernetes |
+                   Improved code quality by implementing best practices and pre-commit linters |
+                   Design and documentation on Data Infrastructure">
             <img class="logo" src="static/emirates-logo.png" alt="Emirates logo" title="Emirates">
             <div class="meta">
               <div class="role">Senior DevOps Data Engineer</div>
@@ -475,8 +492,10 @@
                    data-role="DevOps Engineer"
                    data-company="Merkle Hedge"
                    data-dates="APR 2022 – FEB 2023"
-                   data-summary="Placeholder content: Hardened Kubernetes clusters, optimized Kafka throughput, and implemented secrets management."
-                   data-bullets="Tuned Kafka brokers and connectors; capacity planning and scaling|Automated cluster provisioning and blue-green deployments|Implemented secrets and configuration management; zero-downtime upgrades|Built cost and utilization dashboards to optimize infra spend">
+                   data-bullets="Introduced and established best practices and design patterns|
+                    Improved logging and observability of services with EFK, Prometheus, and Grafana|
+                    Defined and standardized build and deployment processes|
+                    Kubernetes management on bare-metal servers with Rancher">
             <img class="logo" src="static/mh-logo.png" alt="Merkle Hedge logo" title="Merkle Hedge">
             <div class="meta">
               <div class="role">DevOps Engineer</div>
@@ -488,8 +507,12 @@
                    data-role="Site Reliability Engineer"
                    data-company="Kalibrr"
                    data-dates="DEC 2018 – APR 2022"
-                   data-summary="Placeholder content: Created SLOs, error budgets, and auto-remediation runbooks; reduced p99 latency incidents."
-                   data-bullets="Defined SLOs and latency targets; burn-rate alerts for fast detection|Wrote auto-remediation runbooks and incident response playbooks|Load-tested critical flows and fixed bottlenecks across services|Improved on-call health with blameless postmortems and action tracking">
+                   data-bullets="Acted as hiring manager for DevOps/SRE candidates|
+                    Developed automated incident resolution that are based on playbooks|
+                    Actively participated in cost-optimization activities|
+                    ML model containerization and deployment|
+                    Improved and optimized data pipelines reducing job duration by 50%|
+                    Created streaming service that moves data to Google BigQuery via gRPC">
             <img class="logo" src="static/kalibrr-logo.png" alt="Kalibrr logo" title="Kalibrr">
             <div class="meta">
               <div class="role">Site Reliability Engineer</div>
@@ -501,8 +524,11 @@
                    data-role="Systems Administrator"
                    data-company="HTech"
                    data-dates="JUN 2016 – NOV 2018"
-                   data-summary="Placeholder content: Managed on-prem and cloud infra, automated backups, and streamlined incident response."
-                   data-bullets="Managed Linux and Windows servers, databases and monitoring|Automated provisioning with scripts and config management|Implemented offsite backups and tested restore procedures regularly|Streamlined incident handling and patch cadence across environments">
+                   data-bullets="Led and mentored Systems Administration team|
+                    Converted business requirements into technical solutions|
+                    Closely collaborated with development team for project planning and execution|
+                    Bare-metal server management while automating backup and restore processes|
+                    Met clients to understand requirements and objectives in order to provide buesiness solutions">
             <img class="logo" src="static/htech-logo.png" alt="HTech logo" title="HTech">
             <div class="meta">
               <div class="role">Systems Administrator</div>
@@ -682,7 +708,7 @@
         const role    = tile.dataset.role    || 'Role';
         const company = tile.dataset.company || 'Company';
         const dates   = tile.dataset.dates   || 'Dates';
-        const summary = tile.dataset.summary || 'Details about this role.';
+        const summary = tile.dataset.summary || '';
 
         document.querySelector('#modalTitle').textContent = `${role} @ ${company}`;
         document.querySelector('#modalSub').textContent   = dates;
